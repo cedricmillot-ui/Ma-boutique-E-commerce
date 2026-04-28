@@ -136,6 +136,11 @@
                     <a href="{{ route('admin.orders', ['status' => 'delivered']) }}" class="px-6 py-2.5 rounded-full font-inter font-bold text-[10px] tracking-widest transition-all whitespace-nowrap flex items-center gap-2 {{ request('status') == 'delivered' ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20' : 'text-slate-500 hover:text-slate-800' }}">
                         <span class="w-1.5 h-1.5 rounded-full {{ request('status') == 'delivered' ? 'bg-white' : 'bg-emerald-400' }}"></span> LIVRÉES
                     </a>
+                    <a href="{{ route('admin.orders', ['status' => 'cancelled']) }}" 
+   class="px-6 py-2.5 rounded-full font-inter font-bold text-[10px] tracking-widest transition-all whitespace-nowrap flex items-center gap-2 {{ request('status') == 'cancelled' ? 'bg-red-500 text-white shadow-md shadow-red-500/20' : 'text-slate-500 hover:text-slate-800' }}">
+    <span class="w-1.5 h-1.5 rounded-full {{ request('status') == 'cancelled' ? 'bg-white' : 'bg-red-400' }}"></span> 
+    ANNULÉES
+</a>
                 </div>
             </div>
 
@@ -159,26 +164,31 @@
                             {{-- Badge Statut --}}
                             <div class="absolute top-4 left-4">
                                 <div class="px-3 py-1.5 rounded-full backdrop-blur-md bg-white/95 shadow-sm flex items-center gap-2">
-                                    @php
-                                        $statusColor = match($order->status) {
-                                            'paid' => 'text-sky-500',
-                                            'shipped' => 'text-orange-500',
-                                            'delivered' => 'text-emerald-500',
-                                            default => 'text-slate-500'
-                                        };
-                                        $dotColor = match($order->status) {
-                                            'paid' => 'bg-sky-500 animate-pulse',
-                                            'shipped' => 'bg-orange-500',
-                                            'delivered' => 'bg-emerald-500',
-                                            default => 'bg-slate-500'
-                                        };
-                                        $statusLabel = match($order->status) {
-                                            'paid' => 'À PRÉPARER',
-                                            'shipped' => 'EN TRANSIT',
-                                            'delivered' => 'LIVRÉE',
-                                            default => strtoupper($order->status)
-                                        };
-                                    @endphp
+                                   @php
+    $statusColor = match($order->status) {
+        'paid' => 'text-sky-500',
+        'shipped' => 'text-orange-500',
+        'delivered' => 'text-emerald-500',
+        'cancelled' => 'text-red-500',
+        default => 'text-slate-500'
+    };
+
+    $dotColor = match($order->status) {
+        'paid' => 'bg-sky-500 animate-pulse',
+        'shipped' => 'bg-orange-500',
+        'delivered' => 'bg-emerald-500',
+        'cancelled' => 'bg-red-500',
+        default => 'bg-slate-500'
+    };
+
+    $statusLabel = match($order->status) {
+        'paid' => 'À PRÉPARER',
+        'shipped' => 'EN TRANSIT',
+        'delivered' => 'LIVRÉE',
+        'cancelled' => 'ANNULÉE',
+        default => strtoupper($order->status)
+    };
+@endphp
                                     <span class="w-1.5 h-1.5 rounded-full {{ $dotColor }}"></span>
                                     <span class="text-[9px] font-black uppercase tracking-widest {{ $statusColor }}">
                                         {{ $statusLabel }}
@@ -199,19 +209,57 @@
                         <div class="flex-grow p-6 lg:p-8 flex flex-col justify-center">
                             <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-center">
                                 
-                                {{-- Client --}}
-                                <div class="xl:col-span-5">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Informations Client</span>
-                                    <h4 class="font-inter font-black text-2xl text-slate-900 leading-tight mb-1 truncate">{{ $order->user->name }}</h4>
-                                    <a href="mailto:{{ $order->user->email }}" class="font-dm text-sky-600 text-sm hover:underline flex items-center gap-1.5 mb-2">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                                        {{ $order->user->email }}
-                                    </a>
-                                    <span class="inline-block bg-slate-100 text-slate-500 font-mono text-[10px] px-2 py-1 rounded-md">
-                                        REF-{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}
-                                    </span>
-                                </div>
+                              {{-- Client & Chronologie Améliorée --}}
+<div class="xl:col-span-5">
+    <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">Suivi Logistique</span>
+    <h4 class="font-inter font-black text-2xl text-slate-900 leading-tight mb-1 truncate">{{ $order->user->name }}</h4>
+    
+    <div class="mt-4 space-y-2">
+        {{-- 1. Date de Paiement --}}
+        <div class="flex items-center gap-2 text-[11px]">
+            <span class="w-2 h-2 rounded-full bg-sky-400"></span>
+            <span class="font-bold text-slate-700 uppercase tracking-wider">Payée le :</span>
+            <span class="text-slate-500">{{ $order->created_at->translatedFormat('d M. Y') }}</span>
+        </div>
 
+        {{-- 2. Date d'Annulation (Prioritaire si annulée) --}}
+        @if($order->status == 'cancelled')
+            <div class="flex items-center gap-2 text-[11px]">
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span class="font-bold text-red-600 uppercase tracking-wider">Annulée le :</span>
+                <span class="text-red-500 font-bold">{{ $order->updated_at->translatedFormat('d M. Y') }}</span>
+            </div>
+        @endif
+
+        {{-- 3. Date d'Envoi --}}
+        @if(in_array($order->status, ['shipped', 'delivered']))
+            <div class="flex items-center gap-2 text-[11px]">
+                <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                <span class="font-bold text-slate-700 uppercase tracking-wider">Expédiée le :</span>
+                <span class="text-slate-500">{{ $order->updated_at->translatedFormat('d M. Y') }}</span>
+            </div>
+        @endif
+
+        {{-- 4. Date de Réception --}}
+        @if($order->status == 'delivered')
+            <div class="flex items-center gap-2 text-[11px]">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span class="font-bold text-slate-700 uppercase tracking-wider">Livrée le :</span>
+                <span class="text-slate-500">{{ $order->updated_at->translatedFormat('d M. Y') }}</span>
+            </div>
+        @endif
+    </div>
+
+    <div class="mt-4">
+        <a href="mailto:{{ $order->user->email }}" class="font-dm text-sky-600 text-xs hover:underline flex items-center gap-1.5 mb-2">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+            {{ $order->user->email }}
+        </a>
+        <span class="inline-block bg-slate-100 text-slate-500 font-mono text-[9px] px-2 py-1 rounded-md">
+            REF-{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}
+        </span>
+    </div>
+</div>
                                 {{-- Articles --}}
                                 <div class="xl:col-span-7 bg-slate-50/50 rounded-2xl p-4 border border-slate-100/50">
                                     <div class="space-y-2 max-h-[140px] overflow-y-auto pr-2 custom-scrollbar">

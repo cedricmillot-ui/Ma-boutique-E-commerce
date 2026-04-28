@@ -175,95 +175,78 @@
         @endif
     </div>
 
-    {{-- STYLE CSS POUR LES MENUS DÉROULANTS --}}
-    <style>
-        select {
-            appearance: none !important;
-            -webkit-appearance: none !important;
-            -moz-appearance: none !important;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2338bdf8' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E") !important;
-            background-repeat: no-repeat !important;
-            background-position: right 1.5rem center !important;
-            background-size: 1.2rem !important;
-            padding-right: 3.5rem !important;
-            cursor: pointer !important;
-        } 
+   <script>
+    const inputHt = document.getElementById('price_ht');
+    const inputTtc = document.getElementById('price_ttc');
+    const selectTva = document.getElementById('tva_rate');
 
-        select option {
-            background-color: white !important;
-            color: #1e293b !important;
-            padding: 15px !important;
-            font-weight: 600 !important;
-        } [cite: 52]
+    const updateFromHt = () => {
+        const ht = parseFloat(inputHt.value) || 0;
+        const tva = parseFloat(selectTva.value) / 100;
+        inputTtc.value = (ht * (1 + tva)).toFixed(2);
+    };
 
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #bae6fd; border-radius: 10px; } [cite: 53, 54, 55]
-    </style>
+    const updateFromTtc = () => {
+        const ttc = parseFloat(inputTtc.value) || 0;
+        const tva = parseFloat(selectTva.value) / 100;
+        inputHt.value = (ttc / (1 + tva)).toFixed(2);
+    };
 
-    <script>
-        const inputHt = document.getElementById('price_ht');
-        const inputTtc = document.getElementById('price_ttc');
-        const selectTva = document.getElementById('tva_rate'); [cite: 56]
+    inputHt.addEventListener('input', updateFromHt);
+    inputTtc.addEventListener('input', updateFromTtc);
+    selectTva.addEventListener('change', updateFromHt);
 
-        const updateFromHt = () => {
-            const ht = parseFloat(inputHt.value) || 0;
-            const tva = parseFloat(selectTva.value) / 100;
-            inputTtc.value = (ht * (1 + tva)).toFixed(2);
-        }; [cite: 57]
-
-        const updateFromTtc = () => {
-            const ttc = parseFloat(inputTtc.value) || 0;
-            const tva = parseFloat(selectTva.value) / 100;
-            inputHt.value = (ttc / (1 + tva)).toFixed(2);
-        }; [cite: 58, 59]
-
-        inputHt.addEventListener('input', updateFromHt);
-        inputTtc.addEventListener('input', updateFromTtc);
-        selectTva.addEventListener('change', updateFromHt); [cite: 60]
-
-        function previewImage(input) {
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    document.getElementById('image-preview').src = e.target.result;
-                    document.getElementById('preview-box').classList.remove('hidden');
-                }
-                reader.readAsDataURL(input.files[0]);
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('image-preview').src = e.target.result;
+                document.getElementById('preview-box').classList.remove('hidden');
             }
-        } [cite: 61, 62, 63]
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 
-        function openCategoryModal() {
-            const m = document.getElementById('categoryModal');
-            const c = document.getElementById('categoryModalContent');
-            m.classList.remove('hidden'); m.classList.add('flex');
+    function openCategoryModal() {
+        const m = document.getElementById('categoryModal');
+        const c = document.getElementById('categoryModalContent');
+        if (m && c) {
+            m.classList.remove('hidden'); 
+            m.classList.add('flex');
             setTimeout(() => { 
                 c.classList.remove('scale-95', 'opacity-0'); 
                 c.classList.add('scale-100', 'opacity-100'); 
             }, 50);
-        } [cite: 64, 65]
+        }
+    }
 
-        function closeCategoryModal() {
-            const m = document.getElementById('categoryModal');
-            const c = document.getElementById('categoryModalContent');
+    function closeCategoryModal() {
+        const m = document.getElementById('categoryModal');
+        const c = document.getElementById('categoryModalContent');
+        if (m && c) {
             c.classList.remove('scale-100', 'opacity-100'); 
             c.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => { m.classList.remove('flex'); m.classList.add('hidden'); }, 400);
-        } [cite: 66, 67]
+            setTimeout(() => { 
+                m.classList.remove('flex'); 
+                m.classList.add('hidden'); 
+            }, 400);
+        }
+    }
 
-        function toggleEdit(id) {
-            const displayDiv = document.getElementById(`display-${id}`);
-            const editForm = document.getElementById(`edit-${id}`);
-            if (editForm.classList.contains('hidden')) {
-                displayDiv.classList.add('hidden');
-                editForm.classList.remove('hidden');
-                const input = editForm.querySelector('input');
-                input.focus();
-                input.select();
-            } else {
-                displayDiv.classList.remove('hidden');
-                editForm.classList.add('hidden');
-            }
-        } [cite: 68, 69, 70]
-    </script>
+    function toggleEdit(id) {
+        const displayDiv = document.getElementById(`display-${id}`);
+        const editForm = document.getElementById(`edit-${id}`);
+        if (editForm.classList.contains('hidden')) {
+            displayDiv.classList.add('hidden');
+            editForm.classList.remove('hidden');
+            const input = editForm.querySelector('input');
+            input.focus();
+            input.select();
+        } else {
+            displayDiv.classList.remove('hidden');
+            editForm.classList.add('hidden');
+        }
+    }
+</script>
+
 </x-app-layout>
